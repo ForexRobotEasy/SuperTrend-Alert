@@ -1,0 +1,98 @@
+
+//+------------------------------------------------------------------+
+//|                                              SuperTrend Alert.mq5 |
+//|                     Copyright 2021, Forex Robot Easy Team         |
+//|                                         https://www.forexroboteasy.com |
+//+------------------------------------------------------------------+
+#property copyright 'Copyright 2021, Forex Robot Easy Team'
+#property link      'https://www.forexroboteasy.com'
+#property version   '1.00'
+#property strict
+
+// SuperTrend Indicator Parameters
+input int ATRPeriod = 10;
+input double Multiplier = 2.0;
+
+// Alert Parameters
+input bool EnableAlerts = true;
+input bool EnableNotifications = true;
+input bool EnableEmails = true;
+
+// Color Scheme Parameters
+input color UpTrendColor = clrGreen;
+input color DownTrendColor = clrRed;
+input color NeutralColor = clrGray;
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    // Initialize SuperTrend Indicator
+    if (!IndicatorSetInteger(0, INDICATOR_DIGITS, MarketInfo(Symbol(), MODE_DIGITS)))
+    {
+        Print('Failed to set indicator digits!');
+        return INIT_FAILED;
+    }
+    if (!IndicatorSetInteger(0, INDICATOR_ATR_PERIOD, ATRPeriod))
+    {
+        Print('Failed to set ATR period!');
+        return INIT_FAILED;
+    }
+    if (!IndicatorSetDouble(0, INDICATOR_ATR_MULTIPLIER, Multiplier))
+    {
+        Print('Failed to set ATR multiplier!');
+        return INIT_FAILED;
+    }
+
+    // Set color scheme
+    ChartSetInteger(0, CHART_COLOR_CHART_BACKGROUND, NeutralColor);
+    ChartSetInteger(0, CHART_COLOR_FOREGROUND, NeutralColor);
+    ChartSetInteger(0, CHART_COLOR_GRID, NeutralColor);
+    ChartSetInteger(0, CHART_COLOR_POSITIVE, UpTrendColor);
+    ChartSetInteger(0, CHART_COLOR_NEGATIVE, DownTrendColor);
+
+    return INIT_SUCCEEDED;
+}
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    // Reset chart color scheme
+    ChartSetInteger(0, CHART_COLOR_CHART_BACKGROUND, clrDefault);
+    ChartSetInteger(0, CHART_COLOR_FOREGROUND, clrDefault);
+    ChartSetInteger(0, CHART_COLOR_GRID, clrDefault);
+    ChartSetInteger(0, CHART_COLOR_POSITIVE, clrDefault);
+    ChartSetInteger(0, CHART_COLOR_NEGATIVE, clrDefault);
+}
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    // Perform SuperTrend calculations
+    double upperBand, lowerBand;
+    if (!IndicatorGetDouble(0, INDICATOR_UPPER_BAND, 0, upperBand) ||
+        !IndicatorGetDouble(0, INDICATOR_LOWER_BAND, 0, lowerBand))
+    {
+        Print('Failed to retrieve SuperTrend bands!');
+        return;
+    }
+
+    // Check for trend shift indications
+    if (CrossOver(Ask, upperBand))
+    {
+        if (EnableAlerts) Alert('SuperTrend Alert: Upward trend detected!');
+        if (EnableNotifications) SendNotification('SuperTrend Alert', 'Upward trend detected!');
+        if (EnableEmails) SendMail('SuperTrend Alert', 'Upward trend detected!');
+    }
+    else if (CrossUnder(Bid, lowerBand))
+    {
+        if (EnableAlerts) Alert('SuperTrend Alert: Downward trend detected!');
+        if (EnableNotifications) SendNotification('SuperTrend Alert', 'Downward trend detected!');
+        if (EnableEmails) SendMail('SuperTrend Alert', 'Downward trend detected!');
+    }
+}
